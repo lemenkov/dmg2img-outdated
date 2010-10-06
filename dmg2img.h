@@ -20,6 +20,8 @@
 #include "adc.h"
 #include <unistd.h>
 
+#include <endian.h>
+
 #define BT_ADC   0x80000004
 #define BT_ZLIB  0x80000005
 #define BT_BZLIB 0x80000006
@@ -40,34 +42,6 @@ const char list_end[] = "</array>";
 const char chunk_begin[] = "<data>";
 const char chunk_end[] = "</data>";
 const char blkx_begin[] = "<key>blkx</key>";
-
-int convert_int(int i)
-{
-	int o;
-	char *p_i = (char *) &i;
-	char *p_o = (char *) &o;
-	p_o[0] = p_i[3];
-	p_o[1] = p_i[2];
-	p_o[2] = p_i[1];
-	p_o[3] = p_i[0];
-	return o;
-}
-
-uint64_t convert_int64(uint64_t i)
-{
-	uint64_t o;
-	char *p_i = (char *) &i;
-	char *p_o = (char *) &o;
-	p_o[0] = p_i[7];
-	p_o[1] = p_i[6];
-	p_o[2] = p_i[5];
-	p_o[3] = p_i[4];
-	p_o[4] = p_i[3];
-	p_o[5] = p_i[2];
-	p_o[6] = p_i[1];
-	p_o[7] = p_i[0];
-	return o;
-}
 
 uint32_t convert_char4(unsigned char *c)
 {
@@ -138,40 +112,40 @@ struct _mishblk {
 void read_kolyblk(FILE* F, struct _kolyblk* k)
 {
 	fread(k, 0x200, 1, F);
-	k->Signature = convert_int(k->Signature);
-	k->Version = convert_int(k->Version);
-	k->HeaderSize = convert_int(k->HeaderSize);
-	k->Flags = convert_int(k->Flags);
-	k->RunningDataForkOffset = convert_int64(k->RunningDataForkOffset);
-	k->DataForkOffset = convert_int64(k->DataForkOffset);
-	k->DataForkLength = convert_int64(k->DataForkLength);
-	k->RsrcForkOffset = convert_int64(k->RsrcForkOffset);
-	k->RsrcForkLength = convert_int64(k->RsrcForkLength);
-	k->SegmentNumber = convert_int(k->SegmentNumber);
-	k->SegmentCount = convert_int(k->SegmentCount);
-	k->DataForkChecksumType = convert_int(k->DataForkChecksumType);
-	k->DataForkChecksum = convert_int(k->DataForkChecksum);
-	k->XMLOffset = convert_int64(k->XMLOffset);
-	k->XMLLength = convert_int64(k->XMLLength);
-	k->MasterChecksumType = convert_int(k->MasterChecksumType);
-	k->MasterChecksum = convert_int(k->MasterChecksum);
-	k->ImageVariant = convert_int(k->ImageVariant);
-	k->SectorCount = convert_int64(k->SectorCount);
+	k->Signature = be32toh(k->Signature);
+	k->Version = be32toh(k->Version);
+	k->HeaderSize = be32toh(k->HeaderSize);
+	k->Flags = be32toh(k->Flags);
+	k->RunningDataForkOffset = be64toh(k->RunningDataForkOffset);
+	k->DataForkOffset = be64toh(k->DataForkOffset);
+	k->DataForkLength = be64toh(k->DataForkLength);
+	k->RsrcForkOffset = be64toh(k->RsrcForkOffset);
+	k->RsrcForkLength = be64toh(k->RsrcForkLength);
+	k->SegmentNumber = be32toh(k->SegmentNumber);
+	k->SegmentCount = be32toh(k->SegmentCount);
+	k->DataForkChecksumType = be32toh(k->DataForkChecksumType);
+	k->DataForkChecksum = be32toh(k->DataForkChecksum);
+	k->XMLOffset = be64toh(k->XMLOffset);
+	k->XMLLength = be64toh(k->XMLLength);
+	k->MasterChecksumType = be32toh(k->MasterChecksumType);
+	k->MasterChecksum = be32toh(k->MasterChecksum);
+	k->ImageVariant = be32toh(k->ImageVariant);
+	k->SectorCount = be64toh(k->SectorCount);
 }
 
 void fill_mishblk(char* c, struct _mishblk* m)
 {
 	memset(m, 0, sizeof(struct _mishblk));
 	memcpy(m, c, 0xCC);
-	m->BlocksSignature = convert_int(m->BlocksSignature);
-	m->InfoVersion = convert_int(m->InfoVersion);
-	m->FirstSectorNumber = convert_int64(m->FirstSectorNumber);
-	m->SectorCount = convert_int64(m->SectorCount);
-	m->DataStart = convert_int64(m->DataStart);
-	m->DecompressedBufferRequested = convert_int(m->DecompressedBufferRequested);
-	m->BlocksDescriptor = convert_int(m->BlocksDescriptor);
-	m->ChecksumType = convert_int(m->ChecksumType);
-	m->Checksum = convert_int(m->Checksum);
-	m->BlocksRunCount = convert_int(m->BlocksRunCount);
+	m->BlocksSignature = be32toh(m->BlocksSignature);
+	m->InfoVersion = be32toh(m->InfoVersion);
+	m->FirstSectorNumber = be64toh(m->FirstSectorNumber);
+	m->SectorCount = be64toh(m->SectorCount);
+	m->DataStart = be64toh(m->DataStart);
+	m->DecompressedBufferRequested = be32toh(m->DecompressedBufferRequested);
+	m->BlocksDescriptor = be32toh(m->BlocksDescriptor);
+	m->ChecksumType = be32toh(m->ChecksumType);
+	m->Checksum = be32toh(m->Checksum);
+	m->BlocksRunCount = be32toh(m->BlocksRunCount);
 }
 

@@ -185,7 +185,7 @@ int main(int argc, char *argv[])
 	read_kolyblk(FIN, &kolyblk);
 	char szSignature[5];
 	szSignature[4] = '\0';
-	int rSignature = convert_int(kolyblk.Signature);
+	int rSignature = be32toh(kolyblk.Signature);
 	memcpy(szSignature, &rSignature, 4);
 
 	if (debug) {
