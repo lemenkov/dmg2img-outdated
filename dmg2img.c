@@ -18,7 +18,7 @@
 #define _FILE_OFFSET_BITS 64
 #define VERSION "dmg2img v1.6.2 is derived from dmg2iso by vu1tur (to@vu1tur.eu.org)"
 #define USAGE "\
-Usage: dmg2img [-s] [-v] [-V] [-d] <input.dmg> [<output.img>]\n\
+Usage: dmg2img [-s] [-v] [-V] [-d] -i <input.dmg> [<output.img>]\n\
 or     dmg2img [-s] [-v] [-V] [-d] -i <input.dmg> -o <output.img>\n\n\
 Options: -s (silent) -v (verbose) -V (extremely verbose) -d (debug)"
 
@@ -30,6 +30,8 @@ Options: -s (silent) -v (verbose) -V (extremely verbose) -d (debug)"
 #include "dmg2img.h"
 #include "base64.h"
 #include "mntcmd.h"
+
+#include <unistd.h>
 
 /* take chunk size to be 1 MByte so it will work even with little RAM */
 #define CHUNKSIZE 0x100000
@@ -108,28 +110,41 @@ int main(int argc, char *argv[])
 	char sztype[64] = "";
 	unsigned int block_type, dw_reserved;
 
-	for (i = 1; i < argc; i++) {
-		if (!strcmp(argv[i], "-s"))
-			verbose = 0;
-		else if (!strcmp(argv[i], "-v"))
-			verbose = 2;
-		else if (!strcmp(argv[i], "-V"))
-			verbose = 3;
-		else if (!strcmp(argv[i], "-d"))
-			debug = 1;
-		else if (!strcmp(argv[i], "-i") && i < argc - 1)
-			input_file = argv[++i];
-		else if (!strcmp(argv[i], "-o") && i < argc - 1)
-			output_file = argv[++i];
-		else if (!input_file)
-			input_file = argv[i];
-		else if (!output_file)
-			output_file = argv[i];
+	static const char* opts = "svVdi:o:";
+	int opt = 0;
+
+	while ((opt = getopt(argc, argv, opts)) != -1) {
+		switch (opt) {
+			case 's':
+				verbose = 0;
+				break;
+			case 'v':
+				verbose = 2;
+				break;
+			case 'V':
+				verbose = 3;
+				break;
+			case 'd':
+				debug = 1;
+				break;
+			case 'i':
+				input_file = strdup(optarg);
+				break;
+			case 'o':
+				output_file = strdup(optarg);
+				break;
+			default:
+				printf("\n%s\n\n%s\n\n", VERSION, USAGE);
+				exit(EXIT_FAILURE);
+		}
 	}
+
+	if (!output_file)
+		output_file = argv[optind];
 
 	if (!input_file) {
 		printf("\n%s\n\n%s\n\n", VERSION, USAGE);
-		return 0;
+		exit(EXIT_FAILURE);
 	}
 	if (!output_file) {
 		i = strlen(input_file);
